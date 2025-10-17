@@ -181,7 +181,7 @@ const Productos = () => {
             </div>
 
             <div className="row g-4">
-              {filteredProducts.map((product) => (
+              {productos.map((product) => (
                 <div
                   className="col-12 col-sm-6 mb-4 col-lg-4"
                   key={product.id}
@@ -189,6 +189,7 @@ const Productos = () => {
                   style={{ cursor: "pointer" }}
                 >
                   <ProductCard
+                    productId={product.id}
                     product={product}
                     onAddToCart={handleAddToCart}
                   />

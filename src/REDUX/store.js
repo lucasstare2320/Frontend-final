@@ -5,11 +5,12 @@ import productReducer from "./productSlice";
 import categoryReducer from "./categorySlice";
 import carritoReducer from "./carritoSlice";
 import userReducer from "./userSlice";
+import imagesReducer from "./ImageSlice"
 
 
 export const store = configureStore({
   reducer: {
-    posts: postReducer,        
+    images: imagesReducer,        
     cart: cartReducer,         
     products: productReducer,  
     categories: categoryReducer,
