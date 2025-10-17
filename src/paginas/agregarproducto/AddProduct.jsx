@@ -6,7 +6,6 @@ import Navbarperfume from "../landingpage/NAVBAR/Navbar";
 import Footer from "../landingpage/FOOTER/Footer";
 
 const Agregarproducto = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -140,7 +139,7 @@ const Agregarproducto = () => {
                     </div>
 
                     <div className="col-12 col-md-6">
-                      <label className="form-label small text-white">Marca</label>
+                      <label className="form-label small text-white">descripcion</label>
                       <input name="brand" value={form.brand} onChange={handleChange} className="form-control form-control-sm" placeholder="Marca" />
                     </div>
 
@@ -148,11 +147,6 @@ const Agregarproducto = () => {
                       <label className="form-label small text-white">Precio *</label>
                       <input name="price" value={form.price} onChange={handleChange} type="number" step="0.01" className={`form-control form-control-sm ${errors.price ? "is-invalid" : ""}`} />
                       {errors.price && <div className="invalid-feedback">{errors.price}</div>}
-                    </div>
-
-                    <div className="col-6 col-md-3">
-                      <label className="form-label small text-white">Moneda</label>
-                      <input name="currency" value={form.currency} onChange={handleChange} className="form-control form-control-sm" />
                     </div>
 
                     <div className="col-12 col-md-6">
@@ -164,21 +158,6 @@ const Agregarproducto = () => {
                     <div className="col-12 col-md-6">
                       <label className="form-label small text-white">Descuento (%)</label>
                       <input name="Descuento" value={form.Descuento} onChange={handleChange} type="number" className="form-control form-control-sm" />
-                    </div>
-
-                    <div className="col-12">
-                      <label className="form-label small text-white">Descripción</label>
-                      <textarea name="descripcion" value={form.descripcion} onChange={handleChange} className="form-control form-control-sm" rows={2} />
-                    </div>
-
-                    <div className="col-6 col-md-4">
-                      <label className="form-label small text-white">Género</label>
-                      <input name="gender" value={form.gender} onChange={handleChange} className="form-control form-control-sm" placeholder="Femenino / Masculino / Unisex" />
-                    </div>
-
-                    <div className="col-6 col-md-4">
-                      <label className="form-label small text-white">Tipo (texto libre)</label>
-                      <input name="type" value={form.type} onChange={handleChange} className="form-control form-control-sm" />
                     </div>
 
                     <div className="col-6 col-md-4">

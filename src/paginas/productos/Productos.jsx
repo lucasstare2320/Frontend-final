@@ -90,6 +90,7 @@ const Productos = () => {
       stock: 0,
       categoryId: "",
       sellerId: "",
+      discount: 0
     });
   };
 
@@ -159,31 +160,7 @@ const Productos = () => {
               />
             </div>
 
-            {/* Solo visible si es admin */}
-            {admin && (
-              <div className="mt-4 p-3 border border-warning rounded">
-                <h5 className="text-warning mb-3">Agregar producto nuevo</h5>
-                {["name", "description", "price", "stock", "categoryId", "sellerId"].map(
-                  (field) => (
-                    <div className="mb-2" key={field}>
-                      <input
-                        className="form-control"
-                        placeholder={field}
-                        name={field}
-                        value={newProduct[field]}
-                        onChange={handleNewProductChange}
-                      />
-                    </div>
-                  )
-                )}
-                <button
-                  className="btn btn-warning w-100 mt-2"
-                  onClick={handleAddProduct}
-                >
-                  Agregar producto
-                </button>
-              </div>
-            )}
+            
           </aside>
 
           {/* Listado */}

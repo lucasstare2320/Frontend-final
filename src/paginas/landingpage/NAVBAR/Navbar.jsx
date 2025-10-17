@@ -8,8 +8,6 @@ import { useSelector } from "react-redux";
 
 function Navbarperfume() {
   const navigate = useNavigate();
-  const admin = useSelector((state) => state.user?.admin);
-  const cartItems = useSelector((state) => state.cartItems);
 
   const [cartCount, setCartCount] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
@@ -44,7 +42,7 @@ function Navbarperfume() {
             className="navbar-brand brand-text"
             onClick={() => navigate("/landingpage")}
           >
-            <span className="brand-gold">EL CÓDIGO</span>{" "}
+            <span className="brand-gold">EL CÓDGO</span>{" "}
             <span className="brand-white">PERFUMERIE</span>
           </span>
 
@@ -64,7 +62,7 @@ function Navbarperfume() {
           {/* Links */}
           <div className="collapse navbar-collapse" id="navbarPerfume">
             <ul className="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
-              {admin && (
+              
                 <li className="nav-item">
                   <span
                     className="nav-link"
@@ -73,7 +71,7 @@ function Navbarperfume() {
                     Mis Productos
                   </span>
                 </li>
-              )}
+            
 
               <li className="nav-item">
                 <span

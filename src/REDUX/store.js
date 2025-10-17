@@ -3,6 +3,8 @@ import postReducer from "./userSlice";
 import cartReducer from "./cartSlice";
 import productReducer from "./productSlice";
 import categoryReducer from "./categorySlice";
+import carritoReducer from "./carritoSlice";
+import userReducer from "./userSlice";
 
 
 export const store = configureStore({
@@ -10,6 +12,8 @@ export const store = configureStore({
     posts: postReducer,        
     cart: cartReducer,         
     products: productReducer,  
-    categories: categoryReducer, 
+    categories: categoryReducer,
+    users: userReducer, 
+    carrito : carritoReducer
   },
 });

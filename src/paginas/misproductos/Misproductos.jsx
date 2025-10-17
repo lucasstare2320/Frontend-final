@@ -8,7 +8,6 @@ import Footer from "../landingpage/FOOTER/Footer";
 const Misproductos = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const admin = useSelector((state) => state.user?.admin);
 
   const [sortOrder, setSortOrder] = useState("asc");
 
@@ -237,11 +236,11 @@ const Misproductos = () => {
                 <button className="btn btn-sm btn-outline-light me-2" onClick={toggleSortOrder}>
                   Ordenar por precio: {sortOrder === "asc" ? "Asc" : "Desc"}
                 </button>
-                {admin && (
+                
                   <button className="btn btn-sm btn-warning" onClick={goAddProduct}>
                     + Añadir producto
                   </button>
-                )}
+                
               </div>
             </div>
 
@@ -271,7 +270,7 @@ const Misproductos = () => {
                       </div>
                     </div>
 
-                    {admin && (
+                    
                       <div className="d-flex justify-content-between p-2 m-1" style={{ gap: 6 }}>
                         <button
                           className="btn btn-sm btn-outline-warning"
@@ -286,7 +285,7 @@ const Misproductos = () => {
                           Eliminar
                         </button>
                       </div>
-                    )}
+                    
                   </div>
                 </div>
               ))}
