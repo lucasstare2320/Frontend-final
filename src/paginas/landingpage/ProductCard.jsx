@@ -1,11 +1,14 @@
 // ../landingpage/ProductCard.jsx
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const ProductCard = ({ product, onAddToCart }) => {
-  const { name, brand, price, currency, image } = product;
+  const navigate = useNavigate()
+  console.log(product)
+  const { id ,name, description, categoryName ,discount ,price, stock, image } = product;
 
   return (
-    <article
+    <article key={id}
       className="card h-100 text-center border-0"
       role="region"
       aria-label={name}
@@ -38,7 +41,6 @@ const ProductCard = ({ product, onAddToCart }) => {
       >
         <img
           src={image}
-          alt={`${name} de ${brand}`}
           style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
           loading="lazy"
         />
@@ -49,11 +51,19 @@ const ProductCard = ({ product, onAddToCart }) => {
           {name}
         </h5>
         <p className="card-text mb-2" style={{ color: "#bbb", fontSize: "0.9rem" }}>
-          {brand}
+          {categoryName}
+        </p>
+        <p className="card-text mb-2" style={{ color: "#bbb", fontSize: "0.9rem" }}>
+          {description}
         </p>
         <p className="fw-bold mb-0" style={{ color: "#fff", fontSize: "1.1rem" }}>
-          {price}
-          {currency}
+          ${price}
+        </p>
+        <p className="card-text mb-2" style={{ color: "#bbb", fontSize: "0.9rem" }}>
+          ${parseInt((price*(100-discount))/100)}
+        </p>
+        <p className="card-text mb-2" style={{ color: "#bbb", fontSize: "0.9rem" }}>
+          Stock {parseInt(stock)}
         </p>
       </div>
 

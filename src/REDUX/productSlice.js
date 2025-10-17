@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import { details } from "framer-motion/client";
 
 const BASE_URL = "http://localhost:8080/products"; 
 
@@ -17,14 +18,7 @@ export const fetchProducts = createAsyncThunk(
   }
 );
 
-// 🔹 Obtener un producto por ID
-export const fetchProductById = createAsyncThunk(
-  "products/fetchProductById",
-  async (id) => {
-    const { data } = await axios.get(`${BASE_URL}/${id}`);
-    return data;
-  }
-);
+
 
 // 🔹 Crear nuevo producto
 export const createProduct = createAsyncThunk(
@@ -55,14 +49,23 @@ export const deleteProduct = createAsyncThunk(
   }
 );
 
+// 🔹 Obtener un producto por ID
+export const fetchProductById = createAsyncThunk(
+  "products/fetchProductById",
+  async (id) => {
+    const { data } = await axios(`${BASE_URL}/${id}`);
+    return data;
+  }
+);
+
 const productSlice = createSlice({
   name: "products",
   initialState: {
     items: [],
-    selected: null,
+    details: {},
     loading: false,
     error: null,
-  },
+  }, 
   reducers: {
     clearSelectedProduct: (state) => {
       state.selected = null;
@@ -78,6 +81,7 @@ const productSlice = createSlice({
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
         state.items = action.payload;
+        
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
@@ -86,7 +90,12 @@ const productSlice = createSlice({
 
       // GET BY ID
       .addCase(fetchProductById.fulfilled, (state, action) => {
-        state.selected = action.payload;
+        state.loading = false
+        state.details = action.payload;
+      })
+      .addCase(fetchProductById.pending, (state)=>{
+        state.loading = true
+        state.error = null
       })
 
       // CREATE
@@ -114,6 +123,8 @@ const productSlice = createSlice({
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.items = state.items.filter((p) => p.id !== action.payload);
       });
+      console.log("state", details);
+      
   },
 });
 

@@ -49,8 +49,8 @@ const Productos = () => {
     .sort((a, b) => (sortOrder === "asc" ? a.price - b.price : b.price - a.price));
 
   // Redirigir al detalle del producto
-  const handleProductClick = (product) => {
-    navigate(`/detalle/${product.id}`);
+  const handleProductClick = (id) => {
+    navigate(`/detalle/${id}`);
   };
 
   // Agregar al carrito (usa tu reducer de carrito)
@@ -185,7 +185,7 @@ const Productos = () => {
                 <div
                   className="col-12 col-sm-6 mb-4 col-lg-4"
                   key={product.id}
-                  onClick={() => handleProductClick(product)}
+                  onClick={handleProductClick}
                   style={{ cursor: "pointer" }}
                 >
                   <ProductCard

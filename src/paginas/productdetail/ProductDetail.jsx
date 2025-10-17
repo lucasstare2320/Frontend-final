@@ -4,34 +4,43 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./ProductDetail.css";
 import Navbarperfume from "../landingpage/NAVBAR/Navbar";
 import Footer from "../landingpage/FOOTER/Footer";
+import { useParams } from "react-router-dom";
+import { fetchProductById } from "../../REDUX/productSlice";
+import ProductCard from "../landingpage/ProductCard";
 
 const ProductDetail = () => {
   const dispatch = useDispatch();
 
   // Tomamos el producto seleccionado del Redux store
-  const product = useSelector((state) => state.selectedProduct);
+  const product = useSelector((s) => s.products.details);
+
+
+
+  const { id } = useParams();
+
 
   const [size, setSize] = useState("100 ml");
-  const [mainImage, setMainImage] = useState(product ? product.image : "");
+  // const [mainImage, setMainImage] = useState(product ? product.image : "");
 
   // Si el producto cambia en el store, actualizar mainImage
   useEffect(() => {
-    if (product) setMainImage(product.image);
-  }, [product]);
+    const detalleId = product.id;
+    dispatch(fetchProductById(detalleId))
+  },[dispatch,detalleId])
 
-  if (!product) {
-    return (
-      <>
-        <Navbarperfume />
-        <div className="py-5 text-center" style={{ backgroundColor: "#000", minHeight: "60vh" }}>
-          <p style={{ color: "#fff", marginTop: "2rem" }}>
-            Selecciona un producto para ver los detalles.
-          </p>
-        </div>
-        <Footer />
-      </>
-    );
-  }
+  // if (!product) {
+  //   return (
+  //     <>
+  //       <Navbarperfume />
+  //       <div className="py-5 text-center" style={{ backgroundColor: "#000", minHeight: "60vh" }}>
+  //         <p style={{ color: "#fff", marginTop: "2rem" }}>
+  //           Selecciona un producto para ver los detalles.
+  //         </p>
+  //       </div>
+  //       <Footer />
+  //     </>
+  //   );
+  
 
   // Añadir al carrito: toma el producto del store y agrega campos relevantes
   const handleAddToCart = () => {
@@ -65,7 +74,8 @@ const ProductDetail = () => {
 
         <div className="row g-4">
           {/* IMAGEN + MINIATURAS */}
-          <div className="col-12 col-md-6">
+          <ProductCard/>
+          {/* <div className="col-12 col-md-6">
             <div className="card image-card border-0">
               <div className="card-body p-0">
                 <img src={mainImage} alt={product.name} className="img-fluid main-image" />
@@ -82,8 +92,8 @@ const ProductDetail = () => {
                   ))}
                 </div>
               </div>
-            </div>
-          </div>
+            </div> */}
+          {/* </div> */}
 
           {/* INFORMACIÓN */}
           <div className="col-12 col-md-6">
@@ -96,7 +106,7 @@ const ProductDetail = () => {
                 <div className="text-muted">(125 reseñas)</div>
               </div>
 
-              <p className="product-short-desc text-white mb-3">{product.descripcion}</p>
+              <p className="product-short-desc text-white mb-3">{product.name}</p>
 
               <div className="d-flex align-items-center mb-3">
                 <div className="price text-white me-4">
@@ -130,7 +140,7 @@ const ProductDetail = () => {
               </div>
 
               <div className="text-muted small">
-                <strong>SKU:</strong> {product.id} &nbsp; • &nbsp; <strong>Marca:</strong> {product.brand}
+                <strong>SKU:</strong> {product.id} &nbsp; • &nbsp; <strong>Marca:</strong> {product.category}
               </div>
             </div>
           </div>
