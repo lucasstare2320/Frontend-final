@@ -6,8 +6,8 @@ import Footer from "../landingpage/FOOTER/Footer";
 
 const Usuario = () => {
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.user);
-
+  let user = useSelector((state) => state.user);
+  user = {firstName: "lucas", lastName: "stare", email: "lucas@gmail.com", userName: "lucasstare", roles: ["CLIENT"]}
   // Profile editing
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
@@ -231,6 +231,7 @@ const Usuario = () => {
                         <button className="btn btn-sm btn-outline-light me-2" onClick={startEditProfile}>
                           Editar
                         </button>
+
                       </div>
                     ) : (
                       <div>
@@ -247,13 +248,16 @@ const Usuario = () => {
                   {!editingProfile ? (
                     <div className="mt-3">
                       <p style={{ marginBottom: 6 }}>
-                        <strong>ID:</strong> {user.id}
+                        <strong>Nombre:</strong> {user.firstName}
                       </p>
                       <p style={{ marginBottom: 6 }}>
-                        <strong>Nombre:</strong> {user?.nombre ?? user?.name ?? "-"}
+                        <strong>Apellido:</strong> {user.lastName}
                       </p>
                       <p style={{ marginBottom: 6 }}>
-                        <strong>Email:</strong> {user?.email ?? "sin email"}
+                        <strong>Email:</strong> {user.email}
+                      </p>
+                      <p style={{ marginBottom: 6 }}>
+                        <strong>User Name:</strong> {user.userName}
                       </p>
                     </div>
                   ) : (
@@ -262,12 +266,24 @@ const Usuario = () => {
                         <label className="form-label small">Nombre</label>
                         <input
                           className="form-control"
-                          name="nombre"
-                          value={profileForm.nombre}
+                          name="firstName"
+                          value={profileForm.firstName}
                           onChange={handleProfileChange}
                           placeholder="Tu nombre"
                         />
                       </div>
+
+                      <div className="mb-2">
+                        <label className="form-label small">Apellido</label>
+                        <input
+                          className="form-control"
+                          name="lastName"
+                          value={profileForm.lastName}
+                          onChange={handleProfileChange}
+                          placeholder="Tu apellido"
+                        />
+                      </div>
+
                       <div className="mb-2">
                         <label className="form-label small">Email</label>
                         <input
@@ -275,10 +291,22 @@ const Usuario = () => {
                           name="email"
                           value={profileForm.email}
                           onChange={handleProfileChange}
-                          placeholder="tu@correo.com"
+                          placeholder="email"
+                        />
+                      </div>
+
+                      <div className="mb-2">
+                        <label className="form-label small">User Name</label>
+                        <input
+                          className="form-control"
+                          name="username"
+                          value={profileForm.username}
+                          onChange={handleProfileChange}
+                          placeholder="nombre de usuario"
                         />
                       </div>
                     </div>
+
                   )}
                 </section>
 
