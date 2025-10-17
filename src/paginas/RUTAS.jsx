@@ -10,6 +10,8 @@ import Misproductos from './misproductos/Misproductos'
 import Login from './login/login/Login'
 import Registro from './login/registro/registro'
 import Agregarproducto from './agregarproducto/AddProduct'
+import ProtectedRoute from '../components/ProtectedRoute'
+
 //este componente sirve para hacer las rutas, es decir, cambiar entre paginas sin recargar
 // se pueden poner rutas en app pero en gral me gusta en un componente separado
 
@@ -19,18 +21,54 @@ function RUTAS() {
   return (
     <>
       <Routes>
+        {/* Rutas públicas */}
         <Route path='/' element={<Login />}></Route>
-        <Route path='/landingpage' element={<LandingPage></LandingPage>}></Route>
-        <Route path='/detalle/:id' element={<ProductDetail />}></Route>
-        <Route path='/productos' element={<Productos />}></Route>
-        <Route path='/carrito' element={<Carrito />}></Route>
-        <Route path='/perfil' element={<Usuario />}></Route>
-        <Route path='/checkout' element={<Checkout />}></Route>
-        <Route path='/misproductos' element={<Misproductos />}></Route>
         <Route path='/registro' element={<Registro />}></Route>
-        <Route path='/misproductos/nuevo' element={<Agregarproducto />}></Route>
+        <Route path='/landingpage' element={<LandingPage></LandingPage>}></Route>
+        <Route path='/productos' element={<Productos />}></Route>
+        <Route path='/detalle/:id' element={<ProductDetail />}></Route>
 
-
+        {/* Rutas protegidas - requieren autenticación */}
+        <Route
+          path='/perfil'
+          element={
+            <ProtectedRoute>
+              <Usuario />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/carrito'
+          element={
+            <ProtectedRoute>
+              <Carrito />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/checkout'
+          element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/misproductos'
+          element={
+            <ProtectedRoute>
+              <Misproductos />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/misproductos/nuevo'
+          element={
+            <ProtectedRoute>
+              <Agregarproducto />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   )

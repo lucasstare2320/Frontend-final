@@ -1,19 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import {
+  updateUser,
+  logoutUser,
+  addAddress,
+  updateAddress,
+  deleteAddress,
+  updateUserProfile,
+  addAddressToAPI,
+  updateAddressInAPI,
+  deleteAddressFromAPI
+} from "../../REDUX/userSlice";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Navbarperfume from "../landingpage/NAVBAR/Navbar";
 import Footer from "../landingpage/FOOTER/Footer";
 
 const Usuario = () => {
   const dispatch = useDispatch();
-  let user = useSelector((state) => state.user);
-  user = {firstName: "lucas", lastName: "stare", email: "lucas@gmail.com", userName: "lucasstare", roles: ["CLIENT"]}
+  const user = useSelector((state) => state.users?.user);
+  const loading = useSelector((state) => state.users?.loading);
+  const error = useSelector((state) => state.users?.error);
+
   // Profile editing
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
-    nombre: "",
+    firstName: "",
+    lastName: "",
     email: "",
+    username: "",
   });
+  const [saveMessage, setSaveMessage] = useState(null);
 
   // Addresses
   const [addresses, setAddresses] = useState([]); // lista de direcciones
@@ -30,8 +46,10 @@ const Usuario = () => {
   useEffect(() => {
     // inicializar formularios cuando cambia el user
     setProfileForm({
-      nombre: user?.nombre ?? user?.name ?? "",
+      firstName: user?.firstName ?? "",
+      lastName: user?.lastName ?? "",
       email: user?.email ?? "",
+      username: user?.username ?? "",
     });
 
     setAddresses(user?.addresses ? [...user.addresses] : []);
@@ -48,7 +66,7 @@ const Usuario = () => {
   }, [user]);
 
   const handleLogout = () => {
-    dispatch({ type: "LOGOUT" });
+    dispatch(logoutUser());
   };
 
   // PERFIL handlers
@@ -61,23 +79,31 @@ const Usuario = () => {
   const cancelEditProfile = () => {
     setEditingProfile(false);
     setProfileForm({
-      nombre: user?.nombre ?? user?.name ?? "",
+      firstName: user?.firstName ?? "",
+      lastName: user?.lastName ?? "",
       email: user?.email ?? "",
+      username: user?.username ?? "",
     });
   };
 
-  const saveProfile = () => {
-    const updatedUser = {
-      ...user,
-      nombre: profileForm.nombre,
-      // mantener la propiedad 'name' si existe
-      ...(user && "name" in user ? { name: profileForm.nombre } : {}),
+  const saveProfile = async () => {
+    const updatedData = {
+      firstName: profileForm.firstName,
+      lastName: profileForm.lastName,
       email: profileForm.email,
-      addresses: addresses, // mantener direcciones actuales
+      username: profileForm.username,
     };
 
-    dispatch({ type: "UPDATE_USER", payload: updatedUser });
-    setEditingProfile(false);
+    try {
+      await dispatch(updateUserProfile(updatedData)).unwrap();
+      setEditingProfile(false);
+      setSaveMessage({ type: 'success', text: 'Perfil actualizado correctamente' });
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (error) {
+      console.error("Error al actualizar perfil:", error);
+      setSaveMessage({ type: 'error', text: 'Error al actualizar perfil' });
+      setTimeout(() => setSaveMessage(null), 3000);
+    }
   };
 
   // DIRECCIONES handlers
@@ -123,9 +149,8 @@ const Usuario = () => {
     setAddressForm((p) => ({ ...p, [name]: value }));
   };
 
-  const saveAddress = () => {
+  const saveAddress = async () => {
     const normalized = {
-      id: Date.now(), // id temporal
       label: addressForm.label || "Dirección",
       calle: addressForm.calle,
       ciudad: addressForm.ciudad,
@@ -134,40 +159,66 @@ const Usuario = () => {
       telefono: addressForm.telefono,
     };
 
-    const next = [...addresses];
+    try {
+      if (editingAddressIndex >= 0 && editingAddressIndex < addresses.length) {
+        // editar existente
+        const addressToUpdate = addresses[editingAddressIndex];
+        const updatedAddressData = {
+          addressId: addressToUpdate.id,
+          addressData: normalized
+        };
+        await dispatch(updateAddressInAPI(updatedAddressData)).unwrap();
+        setSaveMessage({ type: 'success', text: 'Dirección actualizada correctamente' });
+      } else {
+        // agregar nuevo
+        await dispatch(addAddressToAPI(normalized)).unwrap();
+        setSaveMessage({ type: 'success', text: 'Dirección agregada correctamente' });
+      }
 
-    if (editingAddressIndex >= 0 && editingAddressIndex < addresses.length) {
-      // editar existente
-      next[editingAddressIndex] = { ...next[editingAddressIndex], ...normalized };
-    } else {
-      // agregar nuevo
-      next.push(normalized);
+      // Actualizar estado local
+      const next = [...addresses];
+      if (editingAddressIndex >= 0 && editingAddressIndex < addresses.length) {
+        next[editingAddressIndex] = { ...next[editingAddressIndex], ...normalized };
+      } else {
+        next.push(normalized);
+      }
+      setAddresses(next);
+
+      // limpiar
+      setEditingAddressIndex(-1);
+      setAddressForm({
+        label: "",
+        calle: "",
+        ciudad: "",
+        codigoPostal: "",
+        pais: "",
+        telefono: "",
+      });
+
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (error) {
+      console.error("Error al guardar dirección:", error);
+      setSaveMessage({ type: 'error', text: 'Error al guardar dirección' });
+      setTimeout(() => setSaveMessage(null), 3000);
     }
-
-    setAddresses(next);
-    // persistir en reducer
-    const updatedUser = { ...user, addresses: next, nombre: profileForm.nombre ?? user?.nombre };
-    dispatch({ type: "UPDATE_USER", payload: updatedUser });
-
-    // limpiar
-    setEditingAddressIndex(-1);
-    setAddressForm({
-      label: "",
-      calle: "",
-      ciudad: "",
-      codigoPostal: "",
-      pais: "",
-      telefono: "",
-    });
   };
 
-  const deleteAddress = (idx) => {
-    const next = addresses.filter((_, i) => i !== idx);
-    setAddresses(next);
-    const updatedUser = { ...user, addresses: next };
-    dispatch({ type: "UPDATE_USER", payload: updatedUser });
-    // si estabas editando esa dirección, cancelar
-    if (editingAddressIndex === idx) cancelEditAddress();
+  const handleDeleteAddress = async (idx) => {
+    const addressToDelete = addresses[idx];
+
+    try {
+      await dispatch(deleteAddressFromAPI(addressToDelete.id)).unwrap();
+      const next = addresses.filter((_, i) => i !== idx);
+      setAddresses(next);
+      setSaveMessage({ type: 'success', text: 'Dirección eliminada correctamente' });
+      setTimeout(() => setSaveMessage(null), 3000);
+      // si estabas editando esa dirección, cancelar
+      if (editingAddressIndex === idx) cancelEditAddress();
+    } catch (error) {
+      console.error("Error al eliminar dirección:", error);
+      setSaveMessage({ type: 'error', text: 'Error al eliminar dirección' });
+      setTimeout(() => setSaveMessage(null), 3000);
+    }
   };
 
   return (
@@ -211,6 +262,24 @@ const Usuario = () => {
               Mi Perfil
             </h2>
 
+            {/* Mensajes de éxito/error */}
+            {saveMessage && (
+              <div className={`alert alert-${saveMessage.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`} role="alert">
+                {saveMessage.text}
+                <button type="button" className="btn-close" onClick={() => setSaveMessage(null)}></button>
+              </div>
+            )}
+
+            {/* Indicador de carga */}
+            {loading && (
+              <div className="alert alert-info" role="alert">
+                <div className="spinner-border spinner-border-sm me-2" role="status">
+                  <span className="visually-hidden">Cargando...</span>
+                </div>
+                Guardando cambios...
+              </div>
+            )}
+
             {user ? (
               <>
                 {/* Información Personal */}
@@ -235,11 +304,11 @@ const Usuario = () => {
                       </div>
                     ) : (
                       <div>
-                        <button className="btn btn-sm btn-secondary me-2" onClick={cancelEditProfile}>
+                        <button className="btn btn-sm btn-secondary me-2" onClick={cancelEditProfile} disabled={loading}>
                           Cancelar
                         </button>
-                        <button className="btn btn-sm btn-warning" onClick={saveProfile}>
-                          Guardar
+                        <button className="btn btn-sm btn-warning" onClick={saveProfile} disabled={loading}>
+                          {loading ? 'Guardando...' : 'Guardar'}
                         </button>
                       </div>
                     )}
@@ -257,7 +326,7 @@ const Usuario = () => {
                         <strong>Email:</strong> {user.email}
                       </p>
                       <p style={{ marginBottom: 6 }}>
-                        <strong>User Name:</strong> {user.userName}
+                        <strong>User Name:</strong> {user.username}
                       </p>
                     </div>
                   ) : (
@@ -346,14 +415,13 @@ const Usuario = () => {
                         </div>
                         <div className="d-flex gap-2">
                           <button className="btn btn-sm btn-outline-light" onClick={() => startEditAddress(idx)}>Editar</button>
-                          <button className="btn btn-sm btn-outline-danger" onClick={() => deleteAddress(idx)}>Eliminar</button>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteAddress(idx)}>Eliminar</button>
                         </div>
                       </div>
                     </div>
                   ))}
 
                   {/* FORMULARIO inline para agregar/editar */}
-                  {/* Actualmente no lo hice, pero a futuro, para ver esto en el checkout, van a tener que pasarlo al reducer */}
                   {editingAddressIndex >= 0 && (
                     <div className="mt-3 p-3" style={{ background: "#070707", borderRadius: 8 }}>
                       <h6 style={{ color: "#d4af37" }}>{editingAddressIndex < addresses.length ? "Editar dirección" : "Nueva dirección"}</h6>
@@ -415,8 +483,10 @@ const Usuario = () => {
                       </div>
 
                       <div className="mt-3 d-flex gap-2 justify-content-end">
-                        <button className="btn btn-sm btn-secondary" onClick={cancelEditAddress}>Cancelar</button>
-                        <button className="btn btn-sm btn-warning" onClick={saveAddress}>Guardar dirección</button>
+                        <button className="btn btn-sm btn-secondary" onClick={cancelEditAddress} disabled={loading}>Cancelar</button>
+                        <button className="btn btn-sm btn-warning" onClick={saveAddress} disabled={loading}>
+                          {loading ? 'Guardando...' : 'Guardar dirección'}
+                        </button>
                       </div>
                     </div>
                   )}
