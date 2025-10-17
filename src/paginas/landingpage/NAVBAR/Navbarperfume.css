@@ -1,0 +1,73 @@
+/* Fondo más oscuro */
+.custom-navbar {
+  background-color: #0a0a0a !important;
+}
+
+/* Marca */
+.brand-text {
+  cursor: pointer;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.brand-gold {
+  color: #d4af37;
+}
+
+.brand-white {
+  color: #ffffff;
+}
+
+/* Íconos blancos */
+.icon-link {
+  font-size: 1.2rem;
+  color: #ffffff !important;
+  cursor: pointer;
+}
+
+.icon-link:hover {
+  color: #d4af37 !important;
+}
+
+
+/* Popup fijo y animado */
+.popup-notice {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: rgba(255, 215, 0, 0.9);
+  color: #111;
+  font-weight: 600;
+  padding: 14px 22px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+  z-index: 2000;
+  font-size: 0.95rem;
+  opacity: 0;
+  transform: translateY(30px);
+  pointer-events: none;
+}
+
+/* Animación sutil de aparición y desaparición */
+.animate-popup {
+  animation: fadeSlideInOut 2.5s ease forwards;
+}
+
+@keyframes fadeSlideInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+}

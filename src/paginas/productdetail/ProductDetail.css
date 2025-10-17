@@ -1,0 +1,112 @@
+:root{
+  --bg-dark: #0f0f0f;
+  --panel: #151515;
+  --muted: #bdbdbd;
+  --gold: #d4af37;
+  --gold-strong: #e6c85c;
+  --card-radius: 12px;
+}
+
+
+html, body, #root {
+  background-color: #151515 !important;
+  color: #fff;
+}
+
+
+.product-detail-page {
+  color: #fff;
+  background: transparent;
+  margin-top: 1%;
+}
+
+/* Breadcrumb */
+.breadcrumb a { color: var(--muted); text-decoration: none; }
+.breadcrumb .active { color: #fff; }
+
+/* Image card */
+.image-card {
+  background: linear-gradient(160deg, var(--bg-dark), var(--panel));
+  border-radius: var(--card-radius);
+  padding: 18px;
+  border: 1px solid rgba(212,175,55,0.12);
+}
+
+.main-image {
+  width: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  height: 420px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+
+/* Thumbnails */
+.thumbnail-row { margin-top: 10px; }
+.thumb-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+.thumb-img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.55);
+  transition: border-color .15s ease, transform .12s ease;
+}
+.thumb-btn:hover .thumb-img,
+.thumb-btn:focus .thumb-img {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+}
+
+/* Product info */
+.product-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+.product-subtitle { color: var(--muted); margin-bottom: 0.6rem; }
+.product-short-desc { color: var(--muted); }
+
+.price-figure {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* Add to cart button */
+.btn-add-to-cart {
+  background: var(--gold);
+  color: #0f0f0f;
+  border-radius: 28px;
+  padding: 12px 18px;
+  font-weight: 700;
+  border: none;
+  transition: background .15s ease, transform .08s ease;
+}
+.btn-add-to-cart:hover {
+  background: var(--gold-strong);
+  transform: translateY(-2px);
+}
+
+/* Detailed description box */
+.product-detail-extra {
+  background: #111;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.03);
+  margin-top: 1.5rem;
+  color: var(--muted);
+}
+
+/* Responsive tweaks */
+@media (max-width: 767px) {
+  .main-image { height: 320px; }
+  .thumb-img { width: 60px; height: 60px; }
+  .product-title { font-size: 1.3rem; }
+}

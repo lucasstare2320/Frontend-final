@@ -1,0 +1,47 @@
+.perfume-bg {
+  background: linear-gradient(135deg, #000000 0%, #111111 100%);
+  font-family: "Inter", sans-serif;
+  color: white;
+}
+
+.perfume-card {
+  background-color: #0f0f0f;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.08);
+}
+
+/* Inputs */
+.input-dark {
+  background-color: #1a1a1a !important;
+  border: 1px solid #2a2a2a !important;
+  color: #f8f8f8 !important;
+  transition: all 0.3s ease;
+}
+
+.input-dark:focus {
+  border-color: #d4af37 !important;
+  box-shadow: 0 0 5px rgba(212, 175, 55, 0.4);
+  outline: none !important;
+}
+
+.input-dark::placeholder {
+  color: #777 !important;
+}
+
+/* Botón dorado */
+.btn-gold {
+  background-color: #d4af37 !important;
+  color: #000 !important;
+  border: none !important;
+  transition: all 0.3s ease;
+}
+
+.btn-gold:hover {
+  background-color: #f1c232 !important;
+  transform: translateY(-2px);
+}
+
+/* Dorado elegante */
+.text-gold {
+  color: #d4af37 !important;
+}
