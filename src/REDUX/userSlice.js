@@ -75,7 +75,7 @@ export const addAddressToAPI = createAsyncThunk("users/addAddress", async (addre
     }
   };
 
-  const { data } = await axios.post(`${URL}/user/${userId}/addresses`, addressData, config);
+  const { data } = await axios.post(`${URL}/users/${userId}/addresses`, addressData, config);
   console.log("Dirección agregada:", data);
   return data;
 })

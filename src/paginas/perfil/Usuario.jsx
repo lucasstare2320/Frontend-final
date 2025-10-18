@@ -230,31 +230,6 @@ const Usuario = () => {
       >
         <div className="row">
           {/* Sidebar */}
-          <aside className="col-md-3 mb-4">
-            <div className="list-group">
-              <button
-                className="list-group-item list-group-item-action active bg-dark border-0"
-                style={{ color: "#d4af37", textAlign: "left" }}
-              >
-                Información Personal
-              </button>
-              <button className="list-group-item list-group-item-action bg-dark text-white border-0" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-                Historial de Pedido
-              </button>
-              <button className="list-group-item list-group-item-action bg-dark text-white border-0" onClick={() => document.getElementById("addresses-section")?.scrollIntoView({ behavior: "smooth" })}>
-                Métodos de Pago / Envío
-              </button>
-              <button className="list-group-item list-group-item-action bg-dark text-white border-0">
-                Lista de Deseos
-              </button>
-            </div>
-            <button
-              className="btn btn-outline-light mt-3 w-100"
-              onClick={handleLogout}
-            >
-              Cerrar Sesión
-            </button>
-          </aside>
 
           {/* Main Content */}
           <main className="col-md-9 text-white">
@@ -503,6 +478,15 @@ const Usuario = () => {
               </div>
             )}
           </main>
+           <aside className="col-md-3 mb-4">
+            
+            <button
+              className="btn btn-outline-light mt-3 w-100"
+              onClick={handleLogout}
+            >
+              Cerrar Sesión
+            </button>
+          </aside>
         </div>
       </div>
       <Footer />
