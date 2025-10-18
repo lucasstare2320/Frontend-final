@@ -30,6 +30,36 @@ const removeUserFromLocalStorage = () => {
   }
 };
 
+// Helper functions para guardar direcciones por usuario en localStorage
+const saveAddressesToLocalStorage = (userId, addresses) => {
+  try {
+    const key = `addresses_user_${userId}`;
+    localStorage.setItem(key, JSON.stringify(addresses));
+  } catch (error) {
+    console.error('Error saving addresses to localStorage:', error);
+  }
+};
+
+const loadAddressesFromLocalStorage = (userId) => {
+  try {
+    const key = `addresses_user_${userId}`;
+    const addresses = localStorage.getItem(key);
+    return addresses ? JSON.parse(addresses) : [];
+  } catch (error) {
+    console.error('Error loading addresses from localStorage:', error);
+    return [];
+  }
+};
+
+const removeAddressesFromLocalStorage = (userId) => {
+  try {
+    const key = `addresses_user_${userId}`;
+    localStorage.removeItem(key);
+  } catch (error) {
+    console.error('Error removing addresses from localStorage:', error);
+  }
+};
+
 export const postUsuario = createAsyncThunk("users/postUser", async (newuser) => {
   console.log(newuser)
   const { data } = await axios.post(`${URL}/auth/register`, newuser);
@@ -93,7 +123,7 @@ export const updateAddressInAPI = createAsyncThunk("users/updateAddress", async 
     }
   };
 
-  const { data } = await axios.patch(`${URL}/user/${userId}/addresses/${addressId}`, addressData, config);
+  const { data } = await axios.patch(`${URL}/users/${userId}/addresses/${addressId}`, addressData, config);
   console.log("Dirección actualizada:", data);
   return data;
 })
@@ -111,7 +141,7 @@ export const deleteAddressFromAPI = createAsyncThunk("users/deleteAddress", asyn
     }
   };
 
-  await axios.delete(`${URL}/user/${userId}/addresses/${addressId}`, config);
+  await axios.delete(`${URL}/users/${userId}/addresses/${addressId}`, config);
   console.log("Dirección eliminada:", addressId);
   return addressId;
 })
@@ -130,6 +160,20 @@ const userSlide = createSlice({
       saveUserToLocalStorage(state.user);
     },
     logoutUser: (state) => {
+      // NO eliminamos las direcciones para que persistan por usuario
+      // Las direcciones se mantienen en 'addresses_user_{userId}' para cuando vuelva a loguearse
+      state.user = {};
+      state.loading = false;
+      state.error = null;
+      removeUserFromLocalStorage();
+    },
+    logoutUserAndClearAll: (state) => {
+      // Esta función SÍ elimina todo, incluyendo direcciones
+      // Úsala solo si quieres borrar completamente todos los datos del usuario
+      const userId = state.user.id;
+      if (userId) {
+        removeAddressesFromLocalStorage(userId);
+      }
       state.user = {};
       state.loading = false;
       state.error = null;
@@ -139,6 +183,13 @@ const userSlide = createSlice({
       const user = loadUserFromLocalStorage();
       if (user) {
         state.user = user;
+        // Cargar direcciones desde localStorage si existen
+        if (user.id) {
+          const localAddresses = loadAddressesFromLocalStorage(user.id);
+          if (localAddresses.length > 0) {
+            state.user.addresses = localAddresses;
+          }
+        }
       }
     },
     addAddress: (state, action) => {
@@ -146,16 +197,41 @@ const userSlide = createSlice({
         state.user.addresses = [];
       }
       state.user.addresses.push(action.payload);
+      // Guardar en localStorage
+      if (state.user.id) {
+        saveAddressesToLocalStorage(state.user.id, state.user.addresses);
+      }
+      saveUserToLocalStorage(state.user);
     },
     updateAddress: (state, action) => {
       const { index, address } = action.payload;
       if (state.user.addresses && state.user.addresses[index]) {
         state.user.addresses[index] = { ...state.user.addresses[index], ...address };
+        // Guardar en localStorage
+        if (state.user.id) {
+          saveAddressesToLocalStorage(state.user.id, state.user.addresses);
+        }
+        saveUserToLocalStorage(state.user);
       }
     },
     deleteAddress: (state, action) => {
       if (state.user.addresses) {
         state.user.addresses = state.user.addresses.filter((_, i) => i !== action.payload);
+        // Guardar en localStorage
+        if (state.user.id) {
+          saveAddressesToLocalStorage(state.user.id, state.user.addresses);
+        }
+        saveUserToLocalStorage(state.user);
+      }
+    },
+    // Nueva acción para sincronizar direcciones locales
+    syncAddressesFromLocal: (state) => {
+      if (state.user.id) {
+        const localAddresses = loadAddressesFromLocalStorage(state.user.id);
+        if (localAddresses.length > 0) {
+          state.user.addresses = localAddresses;
+          saveUserToLocalStorage(state.user);
+        }
       }
     }
   },
@@ -214,6 +290,10 @@ const userSlide = createSlice({
           state.user.addresses = [];
         }
         state.user.addresses.push(action.payload);
+        // Guardar en localStorage específico por usuario
+        if (state.user.id) {
+          saveAddressesToLocalStorage(state.user.id, state.user.addresses);
+        }
         saveUserToLocalStorage(state.user);
       })
       .addCase(addAddressToAPI.rejected, (state, action) => {
@@ -232,6 +312,10 @@ const userSlide = createSlice({
         if (index !== -1) {
           state.user.addresses[index] = updatedAddress;
         }
+        // Guardar en localStorage específico por usuario
+        if (state.user.id) {
+          saveAddressesToLocalStorage(state.user.id, state.user.addresses);
+        }
         saveUserToLocalStorage(state.user);
       })
       .addCase(updateAddressInAPI.rejected, (state, action) => {
@@ -249,6 +333,10 @@ const userSlide = createSlice({
         if (state.user.addresses) {
           state.user.addresses = state.user.addresses.filter(addr => addr.id !== addressId);
         }
+        // Guardar en localStorage específico por usuario
+        if (state.user.id) {
+          saveAddressesToLocalStorage(state.user.id, state.user.addresses);
+        }
         saveUserToLocalStorage(state.user);
       })
       .addCase(deleteAddressFromAPI.rejected, (state, action) => {
@@ -259,5 +347,14 @@ const userSlide = createSlice({
   },
 });
 
-export const { updateUser, logoutUser, addAddress, updateAddress, deleteAddress, loadUserFromStorage } = userSlide.actions;
+export const {
+  updateUser,
+  logoutUser,
+  logoutUserAndClearAll,
+  addAddress,
+  updateAddress,
+  deleteAddress,
+  loadUserFromStorage,
+  syncAddressesFromLocal
+} = userSlide.actions;
 export default userSlide.reducer;

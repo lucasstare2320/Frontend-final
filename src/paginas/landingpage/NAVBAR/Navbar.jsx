@@ -4,16 +4,23 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { FaShoppingCart, FaUser } from "react-icons/fa";
 import "./Navbarperfume.css";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { logoutUser } from "../../../REDUX/userSlice";
 
 function Navbarperfume() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [cartCount, setCartCount] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
 
   const prevCount = useRef(0);
   const firstRender = useRef(true); // <-- NUEVO: para evitar popup al montar
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    navigate("/");
+  };
   /*
   useEffect(() => {
     const total = cartItems.reduce((acc, item) => acc + item.qty, 0);
@@ -62,16 +69,16 @@ function Navbarperfume() {
           {/* Links */}
           <div className="collapse navbar-collapse" id="navbarPerfume">
             <ul className="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
-              
-                <li className="nav-item">
-                  <span
-                    className="nav-link"
-                    onClick={() => navigate("/misproductos")}
-                  >
-                    Mis Productos
-                  </span>
-                </li>
-            
+
+              <li className="nav-item">
+                <span
+                  className="nav-link"
+                  onClick={() => navigate("/misproductos")}
+                >
+                  Mis Productos
+                </span>
+              </li>
+
 
               <li className="nav-item">
                 <span
@@ -83,7 +90,7 @@ function Navbarperfume() {
               </li>
 
               <li className="nav-item">
-                <span className="nav-link" onClick={() => navigate("/")}>
+                <span className="nav-link" onClick={handleLogout} style={{ cursor: "pointer" }}>
                   Logout
                 </span>
               </li>

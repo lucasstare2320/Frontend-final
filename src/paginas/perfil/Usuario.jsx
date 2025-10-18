@@ -9,7 +9,8 @@ import {
   updateUserProfile,
   addAddressToAPI,
   updateAddressInAPI,
-  deleteAddressFromAPI
+  deleteAddressFromAPI,
+  syncAddressesFromLocal
 } from "../../REDUX/userSlice";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Navbarperfume from "../landingpage/NAVBAR/Navbar";
@@ -42,6 +43,13 @@ const Usuario = () => {
     pais: "",
     telefono: "",
   });
+
+  // Sincronizar direcciones desde localStorage solo cuando cambia el userId
+  useEffect(() => {
+    if (user?.id) {
+      dispatch(syncAddressesFromLocal());
+    }
+  }, [user?.id, dispatch]);
 
   useEffect(() => {
     // inicializar formularios cuando cambia el user
@@ -151,6 +159,7 @@ const Usuario = () => {
 
   const saveAddress = async () => {
     const normalized = {
+      id: Date.now(), // ID temporal para localStorage
       label: addressForm.label || "Dirección",
       calle: addressForm.calle,
       ciudad: addressForm.ciudad,
@@ -159,87 +168,109 @@ const Usuario = () => {
       telefono: addressForm.telefono,
     };
 
+    const next = [...addresses];
+
+    // Primero guardar localmente
+    if (editingAddressIndex >= 0 && editingAddressIndex < addresses.length) {
+      // Editar existente
+      next[editingAddressIndex] = { ...next[editingAddressIndex], ...normalized };
+      dispatch(updateAddress({ index: editingAddressIndex, address: normalized }));
+    } else {
+      // Agregar nuevo
+      next.push(normalized);
+      dispatch(addAddress(normalized));
+    }
+
+    setAddresses(next);
+
+    // Luego intentar guardar en la API
     try {
       if (editingAddressIndex >= 0 && editingAddressIndex < addresses.length) {
-        // editar existente
         const addressToUpdate = addresses[editingAddressIndex];
         const updatedAddressData = {
           addressId: addressToUpdate.id,
           addressData: normalized
         };
         await dispatch(updateAddressInAPI(updatedAddressData)).unwrap();
-        setSaveMessage({ type: 'success', text: 'Dirección actualizada correctamente' });
+        setSaveMessage({ type: 'success', text: 'Dirección actualizada correctamente (guardada en servidor)' });
       } else {
-        // agregar nuevo
         await dispatch(addAddressToAPI(normalized)).unwrap();
-        setSaveMessage({ type: 'success', text: 'Dirección agregada correctamente' });
+        setSaveMessage({ type: 'success', text: 'Dirección agregada correctamente (guardada en servidor)' });
       }
-
-      // Actualizar estado local
-      const next = [...addresses];
-      if (editingAddressIndex >= 0 && editingAddressIndex < addresses.length) {
-        next[editingAddressIndex] = { ...next[editingAddressIndex], ...normalized };
-      } else {
-        next.push(normalized);
-      }
-      setAddresses(next);
-
-      // limpiar
-      setEditingAddressIndex(-1);
-      setAddressForm({
-        label: "",
-        calle: "",
-        ciudad: "",
-        codigoPostal: "",
-        pais: "",
-        telefono: "",
-      });
 
       setTimeout(() => setSaveMessage(null), 3000);
     } catch (error) {
-      console.error("Error al guardar dirección:", error);
-      setSaveMessage({ type: 'error', text: 'Error al guardar dirección' });
-      setTimeout(() => setSaveMessage(null), 3000);
+      console.error("Error al guardar dirección en servidor:", error);
+      // La dirección ya está guardada localmente
+      setSaveMessage({
+        type: 'warning',
+        text: '⚠️ Dirección guardada localmente. No se pudo sincronizar con el servidor.'
+      });
+      setTimeout(() => setSaveMessage(null), 5000);
     }
+
+    // Limpiar formulario
+    setEditingAddressIndex(-1);
+    setAddressForm({
+      label: "",
+      calle: "",
+      ciudad: "",
+      codigoPostal: "",
+      pais: "",
+      telefono: "",
+    });
   };
 
   const handleDeleteAddress = async (idx) => {
     const addressToDelete = addresses[idx];
 
+    // Primero eliminar localmente
+    const next = addresses.filter((_, i) => i !== idx);
+    setAddresses(next);
+    dispatch(deleteAddress(idx));
+
+    // Luego intentar eliminar del servidor
     try {
       await dispatch(deleteAddressFromAPI(addressToDelete.id)).unwrap();
-      const next = addresses.filter((_, i) => i !== idx);
-      setAddresses(next);
-      setSaveMessage({ type: 'success', text: 'Dirección eliminada correctamente' });
+      setSaveMessage({ type: 'success', text: 'Dirección eliminada correctamente (servidor sincronizado)' });
       setTimeout(() => setSaveMessage(null), 3000);
-      // si estabas editando esa dirección, cancelar
-      if (editingAddressIndex === idx) cancelEditAddress();
     } catch (error) {
-      console.error("Error al eliminar dirección:", error);
-      setSaveMessage({ type: 'error', text: 'Error al eliminar dirección' });
-      setTimeout(() => setSaveMessage(null), 3000);
+      console.error("Error al eliminar dirección del servidor:", error);
+      // La dirección ya está eliminada localmente
+      setSaveMessage({
+        type: 'warning',
+        text: '⚠️ Dirección eliminada localmente. No se pudo sincronizar con el servidor.'
+      });
+      setTimeout(() => setSaveMessage(null), 5000);
     }
+
+    // si estabas editando esa dirección, cancelar
+    if (editingAddressIndex === idx) cancelEditAddress();
   };
 
   return (
     <>
       <Navbarperfume />
       <div
-        className="container-fluid py-4"
+        className="container py-5"
         style={{ backgroundColor: "#000", minHeight: "100vh" }}
       >
-        <div className="row">
-          {/* Sidebar */}
-
+        <div className="row justify-content-center">
           {/* Main Content */}
-          <main className="col-md-9 text-white">
-            <h2 className="mb-4" style={{ color: "#d4af37" }}>
-              Mi Perfil
-            </h2>
+          <main className="col-12 col-lg-10 col-xl-8 text-white">
+            <div className="text-center mb-5">
+              <h2 className="mb-2" style={{ color: "#d4af37", fontSize: "2.5rem", fontWeight: "bold" }}>
+                Mi Perfil
+              </h2>
+              <p className="text-muted">Gestiona tu información personal y direcciones de envío</p>
+            </div>
 
-            {/* Mensajes de éxito/error */}
+            {/* Mensajes de éxito/error/advertencia */}
             {saveMessage && (
-              <div className={`alert alert-${saveMessage.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`} role="alert">
+              <div className={`alert alert-${saveMessage.type === 'success' ? 'success' :
+                saveMessage.type === 'warning' ? 'warning' :
+                  'danger'
+                } alert-dismissible fade show`} role="alert">
                 {saveMessage.text}
                 <button type="button" className="btn-close" onClick={() => setSaveMessage(null)}></button>
               </div>
@@ -259,12 +290,13 @@ const Usuario = () => {
               <>
                 {/* Información Personal */}
                 <section
-                  className="mb-4 p-3 rounded"
-                  style={{ backgroundColor: "#111" }}
+                  className="mb-5 p-4 rounded shadow-lg"
+                  style={{ backgroundColor: "#111", border: "1px solid #222" }}
                 >
-                  <div className="d-flex justify-content-between align-items-start">
+                  <div className="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                      <h4 className="mb-1" style={{ color: "#d4af37" }}>
+                      <h4 className="mb-2" style={{ color: "#d4af37", fontSize: "1.5rem" }}>
+                        <i className="bi bi-person-circle me-2"></i>
                         Información Personal
                       </h4>
                       <small className="text-muted">Editá tu nombre y e-mail</small>
@@ -357,12 +389,13 @@ const Usuario = () => {
                 {/* Direcciones de Envío */}
                 <section
                   id="addresses-section"
-                  className="p-3 rounded"
-                  style={{ backgroundColor: "#111" }}
+                  className="p-4 rounded shadow-lg"
+                  style={{ backgroundColor: "#111", border: "1px solid #222" }}
                 >
-                  <div className="d-flex justify-content-between align-items-center mb-2">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                      <h4 className="mb-1" style={{ color: "#d4af37" }}>
+                      <h4 className="mb-2" style={{ color: "#d4af37", fontSize: "1.5rem" }}>
+                        <i className="bi bi-geo-alt-fill me-2"></i>
                         Direcciones de Envío
                       </h4>
                       <small className="text-muted">Añadí o editá tus direcciones</small>
@@ -379,18 +412,36 @@ const Usuario = () => {
                   )}
 
                   {addresses.map((a, idx) => (
-                    <div key={a.id ?? idx} className="mb-2 p-2 rounded" style={{ background: "#0b0b0b", border: "1px solid rgba(255,255,255,0.03)" }}>
+                    <div key={a.id ?? idx} className="mb-3 p-3 rounded" style={{
+                      background: "#0b0b0b",
+                      border: "1px solid rgba(212, 175, 55, 0.2)",
+                      transition: "all 0.3s ease"
+                    }}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = "rgba(212, 175, 55, 0.5)"}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = "rgba(212, 175, 55, 0.2)"}
+                    >
                       <div className="d-flex justify-content-between align-items-start">
                         <div>
-                          <div style={{ color: "#d4af37", fontWeight: 600 }}>{a.label || "Dirección"}</div>
-                          <div className="small text-white">
+                          <div style={{ color: "#d4af37", fontWeight: 600, fontSize: "1.1rem", marginBottom: "8px" }}>
+                            <i className="bi bi-house-door-fill me-2"></i>
+                            {a.label || "Dirección"}
+                          </div>
+                          <div className="text-white mb-1">
+                            <i className="bi bi-geo-alt me-2"></i>
                             {a.calle}{a.ciudad ? `, ${a.ciudad}` : ""}{a.codigoPostal ? ` • ${a.codigoPostal}` : ""}
                           </div>
-                          <div className="small text-muted">{a.pais} {a.telefono ? `• ${a.telefono}` : ""}</div>
+                          <div className="small text-muted">
+                            <i className="bi bi-globe me-2"></i>
+                            {a.pais} {a.telefono ? `• 📞 ${a.telefono}` : ""}
+                          </div>
                         </div>
-                        <div className="d-flex gap-2">
-                          <button className="btn btn-sm btn-outline-light" onClick={() => startEditAddress(idx)}>Editar</button>
-                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteAddress(idx)}>Eliminar</button>
+                        <div className="d-flex gap-2 flex-column flex-sm-row">
+                          <button className="btn btn-sm btn-outline-warning" onClick={() => startEditAddress(idx)}>
+                            <i className="bi bi-pencil me-1"></i>Editar
+                          </button>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteAddress(idx)}>
+                            <i className="bi bi-trash me-1"></i>Eliminar
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -398,8 +449,15 @@ const Usuario = () => {
 
                   {/* FORMULARIO inline para agregar/editar */}
                   {editingAddressIndex >= 0 && (
-                    <div className="mt-3 p-3" style={{ background: "#070707", borderRadius: 8 }}>
-                      <h6 style={{ color: "#d4af37" }}>{editingAddressIndex < addresses.length ? "Editar dirección" : "Nueva dirección"}</h6>
+                    <div className="mt-4 p-4 shadow-lg" style={{
+                      background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)",
+                      borderRadius: 12,
+                      border: "2px solid #d4af37"
+                    }}>
+                      <h5 className="mb-4" style={{ color: "#d4af37", fontWeight: "600" }}>
+                        <i className="bi bi-plus-circle me-2"></i>
+                        {editingAddressIndex < addresses.length ? "Editar dirección" : "Nueva dirección"}
+                      </h5>
                       <div className="row g-2 mt-2">
                         <div className="col-12 col-md-6">
                           <input
@@ -466,27 +524,34 @@ const Usuario = () => {
                     </div>
                   )}
                 </section>
+
+                {/* Botón de Cerrar Sesión */}
+                <div className="text-center mt-5 mb-4">
+                  <button
+                    className="btn btn-outline-danger btn-lg px-5"
+                    onClick={handleLogout}
+                    style={{
+                      borderWidth: "2px",
+                      fontWeight: "600",
+                      transition: "all 0.3s ease"
+                    }}
+                  >
+                    <i className="bi bi-box-arrow-right me-2"></i>
+                    Cerrar Sesión
+                  </button>
+                </div>
               </>
             ) : (
-              <div className="p-4 bg-dark rounded text-center">
-                <p className="text-white mb-3">
+              <div className="p-5 bg-dark rounded text-center">
+                <p className="text-white mb-3 fs-5">
                   No hay usuario logueado. Inicia sesión para ver tu perfil.
                 </p>
-                <a href="/" className="btn btn-warning">
+                <a href="/" className="btn btn-warning btn-lg px-4">
                   Ir a Login
                 </a>
               </div>
             )}
           </main>
-           <aside className="col-md-3 mb-4">
-            
-            <button
-              className="btn btn-outline-light mt-3 w-100"
-              onClick={handleLogout}
-            >
-              Cerrar Sesión
-            </button>
-          </aside>
         </div>
       </div>
       <Footer />
