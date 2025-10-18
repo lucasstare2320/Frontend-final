@@ -1,118 +1,70 @@
-import React, { useEffect, useState, useRef } from "react";
+// Navbarperfume.jsx
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { FaShoppingCart, FaUser } from "react-icons/fa";
+import { logoutUser } from "../../../REDUX/userSlice";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import { FaShoppingCart, FaUser } from "react-icons/fa";
 import "./Navbarperfume.css";
-import { useSelector, useDispatch } from "react-redux";
-import { logoutUser } from "../../../REDUX/userSlice";
 
 function Navbarperfume() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [cartCount, setCartCount] = useState(0);
-  const [showPopup, setShowPopup] = useState(false);
+  const cartItems = useSelector((state) => state.cart.items);
+  const cartCount = cartItems.reduce((acc, i) => acc + i.qty, 0);
 
+  const [showPopup, setShowPopup] = useState(false);
+  const [badgeBump, setBadgeBump] = useState(false);
   const prevCount = useRef(0);
-  const firstRender = useRef(true); // <-- NUEVO: para evitar popup al montar
+  const firstRender = useRef(true);
+  const hideTimer = useRef(null);
+  const bumpTimer = useRef(null);
+  const cartIconRef = useRef(null);
 
   const handleLogout = () => {
     dispatch(logoutUser());
     navigate("/");
   };
-  /*
-  useEffect(() => {
-    const total = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
-    // Evitar que se ejecute en el primer render
-    if (!firstRender.current) {
-      // Mostrar solo si el carrito aumentó
-      if (total > prevCount.current) {
-        setShowPopup(true);
-        setTimeout(() => setShowPopup(false), 2500);
-      }
-    } else {
-      firstRender.current = false;
-    }
-
-    prevCount.current = total;
-    setCartCount(total);
-  }, [cartItems]);
-  */
   return (
     <>
       <nav className="navbar navbar-expand-lg navbar-dark sticky-top custom-navbar">
         <div className="container">
-          {/* Logo */}
-          <span
-            className="navbar-brand brand-text"
-            onClick={() => navigate("/landingpage")}
-          >
-            <span className="brand-gold">EL CÓDGO</span>{" "}
+          <span className="navbar-brand brand-text" onClick={() => navigate("/landingpage")}>
+            <span className="brand-gold">EL CÓDIGO</span>{" "}
             <span className="brand-white">PERFUMERIE</span>
           </span>
 
-          {/* Toggle */}
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarPerfume"
-            aria-controls="navbarPerfume"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
+          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarPerfume">
             <span className="navbar-toggler-icon"></span>
           </button>
 
-          {/* Links */}
           <div className="collapse navbar-collapse" id="navbarPerfume">
             <ul className="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
-
+              
               <li className="nav-item">
-                <span
-                  className="nav-link"
-                  onClick={() => navigate("/misproductos")}
-                >
-                  Mis Productos
-                </span>
+                <span className="nav-link" onClick={() => navigate("/productos")}>Productos</span>
               </li>
-
-
               <li className="nav-item">
-                <span
-                  className="nav-link"
-                  onClick={() => navigate("/productos")}
-                >
-                  Productos
-                </span>
-              </li>
-
-              <li className="nav-item">
-                <span className="nav-link" onClick={handleLogout} style={{ cursor: "pointer" }}>
-                  Logout
-                </span>
+                <span className="nav-link" onClick={handleLogout} style={{ cursor: "pointer" }}>Logout</span>
               </li>
 
               {/* Carrito */}
               <li className="nav-item position-relative">
-                <span
-                  className="nav-link icon-link"
-                  onClick={() => navigate("/carrito")}
-                >
+                <span ref={cartIconRef} className="nav-link icon-link" onClick={() => navigate("/carrito")}>
                   <FaShoppingCart />
                   {cartCount > 0 && (
-                    <span className="cart-badge">{cartCount}</span>
+                    <span className={`cart-badge ${badgeBump ? "cart-badge-bump" : ""}`}>
+                      {cartCount}
+                    </span>
                   )}
                 </span>
               </li>
 
               <li className="nav-item">
-                <span
-                  className="nav-link icon-link"
-                  onClick={() => navigate("/perfil")}
-                >
+                <span className="nav-link icon-link" onClick={() => navigate("/perfil")}>
                   <FaUser />
                 </span>
               </li>

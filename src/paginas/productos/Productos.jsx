@@ -1,100 +1,85 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ProductCard from "../landingpage/ProductCard";
-import "bootstrap/dist/css/bootstrap.min.css";
 import Navbarperfume from "../landingpage/NAVBAR/Navbar";
 import Footer from "../landingpage/FOOTER/Footer";
+import { toast } from "react-toastify";
 
-// 🧩 importamos las acciones del slice de productos
-import {
-  fetchProducts,
-  createProduct,
-} from "../../REDUX/productSlice";
+import { fetchProducts, createProduct } from "../../REDUX/productSlice";
+import { fetchCategories } from "../../REDUX/categorySlice"; // 👈 importar thunk
+import { addToCart, clearLastInfo } from "../../REDUX/cartSlice";
 
 const Productos = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // obtenemos los datos desde redux
-  const { items: productos, loading, error } = useSelector((state) => state.products);
-  const admin = useSelector((state) => state.user?.admin);
+  const { items: productos, loading, error } = useSelector((s) => s.products);
+  const { items: categorias } = useSelector((s) => s.categories); // 👈 categorías del store
+  const lastInfo = useSelector((s) => s.cart.lastInfo);
 
-console.log("productos", productos)
-
-  // estado local para filtros
-  const [selectedBrand, setSelectedBrand] = useState("Todas");
-  const [priceRange, setPriceRange] = useState([0, 200]);
+  // filtros
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all"); // "all" | number
+  const [priceRange, setPriceRange] = useState([0, 0]);
+  const [maxPrice, setMaxPrice] = useState(0);
   const [sortOrder, setSortOrder] = useState("asc");
 
-  // producto nuevo (para admin)
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    description: "",
-    price: 0,
-    stock: 0,
-    categoryId: "",
-    sellerId: "",
-  });
-
-  // Cargar productos al montar el componente
+  // cargar productos + categorías
   useEffect(() => {
     dispatch(fetchProducts());
+    dispatch(fetchCategories());
   }, [dispatch]);
 
-  // Filtrado
-  const filteredProducts = productos
-    .filter((p) =>
-      selectedBrand === "Todas" ? true : p.category?.name === selectedBrand
-    )
-    .filter((p) => p.price >= priceRange[0] && p.price <= priceRange[1])
-    .sort((a, b) => (sortOrder === "asc" ? a.price - b.price : b.price - a.price));
-
-  // Redirigir al detalle del producto
-  const handleProductClick = (id) => {
-    navigate(`/detalle/${id}`);
+  // helper precio con descuento
+  const getDiscountedPrice = (p) => {
+    const price = Number(p?.price) || 0;
+    const discount = Number(p?.discount) || 0;
+    return Math.max(0, price * (1 - discount / 100));
   };
 
-  // Agregar al carrito (usa tu reducer de carrito)
+  // setear max del slider dinámico
+  useEffect(() => {
+    if (!productos || productos.length === 0) return;
+    const max = Math.max(...productos.map(getDiscountedPrice));
+    setMaxPrice(max);
+    setPriceRange([0, max]);
+  }, [productos]);
+
+  // filtrar + ordenar
+  const filteredProducts = useMemo(() => {
+    return (productos || [])
+      .filter((p) =>
+        selectedCategoryId === "all"
+          ? true
+          : Number(p.categoryId) === Number(selectedCategoryId) ||
+            p.categoryName === categorias.find(c => c.id === Number(selectedCategoryId))?.name
+      )
+      .filter((p) => {
+        const finalPrice = getDiscountedPrice(p);
+        return finalPrice >= priceRange[0] && finalPrice <= priceRange[1];
+      })
+      .sort((a, b) => {
+        const pa = getDiscountedPrice(a);
+        const pb = getDiscountedPrice(b);
+        return sortOrder === "asc" ? pa - pb : pb - pa;
+      });
+  }, [productos, selectedCategoryId, priceRange, sortOrder, categorias]);
+
+  const handleProductClick = (id) => navigate(`/detalle/${id}`);
+
   const handleAddToCart = (product) => {
-    dispatch({
-      type: "ADD_TO_CART",
-      payload: {
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image: product.image,
-        qty: 1,
-      },
-    });
+    dispatch(addToCart({ ...product, qty: 1 }));
   };
 
-  // Control de inputs para admin
-  const handleNewProductChange = (e) => {
-    const { name, value } = e.target;
-    setNewProduct((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleAddProduct = () => {
-    const body = {
-      name: newProduct.name,
-      description: newProduct.description,
-      price: parseFloat(newProduct.price),
-      stock: parseInt(newProduct.stock),
-      categoryId: parseInt(newProduct.categoryId),
-      sellerId: parseInt(newProduct.sellerId),
-    };
-    dispatch(createProduct(body));
-    setNewProduct({
-      name: "",
-      description: "",
-      price: 0,
-      stock: 0,
-      categoryId: "",
-      sellerId: "",
-      discount: 0
-    });
-  };
+  useEffect(() => {
+    if (!lastInfo) return;
+    if (lastInfo.type === "LIMIT_REACHED") {
+      toast.warn(`⚠️ Solo ${lastInfo.stock} unidades disponibles de ${lastInfo.name}`, { autoClose: 2000 });
+    } else if (lastInfo.type === "ADDED") {
+      toast.success(`🛒 ${lastInfo.name} agregado (x${lastInfo.qtyAdded})`, { autoClose: 2000 });
+    }
+    dispatch(clearLastInfo());
+  }, [lastInfo, dispatch]);
 
   if (loading) return <p className="text-white text-center">Cargando productos...</p>;
   if (error) return <p className="text-danger text-center">Error: {error}</p>;
@@ -108,47 +93,42 @@ console.log("productos", productos)
           <aside className="col-md-3 text-white mb-4">
             <h4 className="mb-3" style={{ color: "#d4af37" }}>Filtros</h4>
 
-            {/* Categoría / Marca */}
+            {/* Categoría */}
             <div className="mb-3">
               <label className="form-label">Categoría</label>
               <select
                 className="form-select"
-                value={selectedBrand}
-                onChange={(e) => setSelectedBrand(e.target.value)}
+                value={selectedCategoryId}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedCategoryId(val === "all" ? "all" : Number(val));
+                }}
               >
-                <option value="Todas">Todas</option>
-                {Array.from(new Set(productos.map((p) => p.category?.name))).map(
-                  (type, i) => (
-                    <option key={i} value={type}>
-                      {type}
-                    </option>
-                  )
-                )}
+                <option value="all">Todas</option>
+                {categorias.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Rango de precio */}
+            {/* Rango de precio con descuento */}
             <div className="mb-3">
-              <label className="form-label">
-                Precio máximo: {priceRange[1]} €
-              </label>
+              <label className="form-label">Precio máximo: ${Math.ceil(priceRange[1])}</label>
               <input
                 type="range"
                 className="form-range"
-                min="50"
-                max="200"
+                min="0"
+                max={Math.ceil(maxPrice)}
                 step="5"
                 value={priceRange[1]}
-                onChange={(e) =>
-                  setPriceRange([priceRange[0], parseInt(e.target.value)])
-                }
+                onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
               />
             </div>
 
             <div className="mb-3">
-              <label className="form-label">
-                Precio mínimo: {priceRange[0]} €
-              </label>
+              <label className="form-label">Precio mínimo: ${priceRange[0]}</label>
               <input
                 type="range"
                 className="form-range"
@@ -156,13 +136,9 @@ console.log("productos", productos)
                 max={priceRange[1]}
                 step="5"
                 value={priceRange[0]}
-                onChange={(e) =>
-                  setPriceRange([parseInt(e.target.value), priceRange[1]])
-                }
+                onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}
               />
             </div>
-
-            
           </aside>
 
           {/* Listado */}
@@ -176,23 +152,23 @@ console.log("productos", productos)
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value)}
                 >
-                  <option value="asc">Precio (ascendente)</option>
-                  <option value="desc">Precio (descendente)</option>
+                  <option value="asc">Precio ascendente</option>
+                  <option value="desc">Precio descendente</option>
                 </select>
               </div>
             </div>
 
             <div className="row g-4">
-              {productos.map((product) => (
+              {filteredProducts.map((product) => (
                 <div
                   className="col-12 col-sm-6 mb-4 col-lg-4"
                   key={product.id}
-                  onClick={handleProductClick}
+                  onClick={() => handleProductClick(product.id)}
                   style={{ cursor: "pointer" }}
                 >
                   <ProductCard
                     product={product}
-                    onAddToCart={handleAddToCart}
+                    onAddToCart={() => handleAddToCart(product)}
                   />
                 </div>
               ))}

@@ -15,12 +15,31 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 import Navbarperfume from "../landingpage/NAVBAR/Navbar";
 import Footer from "../landingpage/FOOTER/Footer";
+import { fetchProducts } from "../../REDUX/productSlice";
 
 const Usuario = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.users?.user);
   const loading = useSelector((state) => state.users?.loading);
   const error = useSelector((state) => state.users?.error);
+
+  const orders = useSelector((s) => s.orders.list);
+const loadingOrders = useSelector((s) => s.orders.loadingList);
+const products = useSelector(s => s.products.items || []);
+const productById = React.useMemo(() => {
+  const map = new Map();
+  (products || []).forEach(p => map.set(p.id, p));
+  return map;
+}, [products]);
+
+const money = (x) =>
+  Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(x ?? 0);
+
+const getDiscountedPrice = (price, discount) => {
+  const pct = Number(discount) || 0;              
+  const p = Number(price) || 0;
+  return Math.max(0, p * (1 - pct / 100));
+};
 
   // Profile editing
   const [editingProfile, setEditingProfile] = useState(false);
@@ -385,145 +404,131 @@ const Usuario = () => {
 
                   )}
                 </section>
+<section className="mt-5 p-4 rounded" style={{ backgroundColor: "#111", border: "1px solid #222" }}>
+  <h4 style={{ color: "#d4af37" }}>Mis Órdenes</h4>
 
-                {/* Direcciones de Envío */}
-                <section
-                  id="addresses-section"
-                  className="p-4 rounded shadow-lg"
-                  style={{ backgroundColor: "#111", border: "1px solid #222" }}
-                >
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                      <h4 className="mb-2" style={{ color: "#d4af37", fontSize: "1.5rem" }}>
-                        <i className="bi bi-geo-alt-fill me-2"></i>
-                        Direcciones de Envío
-                      </h4>
-                      <small className="text-muted">Añadí o editá tus direcciones</small>
-                    </div>
-                    <div>
-                      <button className="btn btn-sm btn-warning" onClick={startAddAddress}>
-                        + Añadir dirección
-                      </button>
-                    </div>
-                  </div>
+  {loadingOrders && <div className="text-muted">Cargando...</div>}
 
-                  {addresses.length === 0 && (
-                    <div className="text-muted mb-3">No hay direcciones guardadas.</div>
-                  )}
+  {!loadingOrders && (!orders || orders.length === 0) && (
+    <div className="text-muted">No tenés órdenes aún.</div>
+  )}
 
-                  {addresses.map((a, idx) => (
-                    <div key={a.id ?? idx} className="mb-3 p-3 rounded" style={{
-                      background: "#0b0b0b",
-                      border: "1px solid rgba(212, 175, 55, 0.2)",
-                      transition: "all 0.3s ease"
-                    }}
-                      onMouseEnter={(e) => e.currentTarget.style.borderColor = "rgba(212, 175, 55, 0.5)"}
-                      onMouseLeave={(e) => e.currentTarget.style.borderColor = "rgba(212, 175, 55, 0.2)"}
+  {!loadingOrders && orders && orders.length > 0 && (
+    <div className="d-flex flex-column gap-3">
+      {orders.map((o) => (
+        <div
+          key={o.id}
+          className="p-3 rounded bg-dark"
+          style={{ border: "1px solid rgba(212,175,55,0.25)" }}
+        >
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <strong style={{ color: "#d4af37" }}>Orden #{o.id}</strong>
+              <div className="small text-muted">Usuario: {o.userId}</div>
+            </div>
+            <span
+              className="badge"
+              style={{
+                backgroundColor:
+                  o.status === "PENDING" ? "#c79020" :
+                  o.status === "PAID" ? "#2b9348" :
+                  o.status === "CANCELLED" ? "#b02a37" : "#6c757d"
+              }}
+            >
+              {o.status}
+            </span>
+          </div>
+
+          {/* Ítems enriquecidos con datos de Redux */}
+          <div className="mt-3">
+            <div className="text-white-50 mb-2">Items</div>
+
+            {Array.isArray(o.items) && o.items.length > 0 ? (
+              <ul className="list-group list-group-flush bg-transparent">
+                {o.items.map((it, idx) => {
+                  const prod = productById.get(it.productId);
+                  const qty = Number(it.quantity) || 0;
+
+                  // Fallback si no se encontró el producto
+                  if (!prod) {
+                    return (
+                      <li
+                        key={`${o.id}-${it.productId}-${idx}`}
+                        className="list-group-item bg-transparent text-white px-0"
+                        style={{ borderColor: "#333" }}
+                      >
+                        <div className="d-flex justify-content-between">
+                          <span>Producto #{it.productId}</span>
+                          <span className="text-white-50">Cantidad: {qty}</span>
+                        </div>
+                        <small className="text-muted">Detalles no disponibles (producto no cargado)</small>
+                      </li>
+                    );
+                  }
+
+                  const unit = Number(prod.price) || 0;
+                  const pct = Number(prod.discount) || 0;
+                  const unitDisc = getDiscountedPrice(unit, pct);
+                  const lineSubtotal = unit * qty;
+                  const lineTotal = unitDisc * qty;
+
+                  return (
+                    <li
+                      key={`${o.id}-${it.productId}-${idx}`}
+                      className="list-group-item bg-transparent text-white px-0"
+                      style={{ borderColor: "#333" }}
                     >
-                      <div className="d-flex justify-content-between align-items-start">
-                        <div>
-                          <div style={{ color: "#d4af37", fontWeight: 600, fontSize: "1.1rem", marginBottom: "8px" }}>
-                            <i className="bi bi-house-door-fill me-2"></i>
-                            {a.label || "Dirección"}
-                          </div>
-                          <div className="text-white mb-1">
-                            <i className="bi bi-geo-alt me-2"></i>
-                            {a.calle}{a.ciudad ? `, ${a.ciudad}` : ""}{a.codigoPostal ? ` • ${a.codigoPostal}` : ""}
-                          </div>
-                          <div className="small text-muted">
-                            <i className="bi bi-globe me-2"></i>
-                            {a.pais} {a.telefono ? `• 📞 ${a.telefono}` : ""}
-                          </div>
-                        </div>
-                        <div className="d-flex gap-2 flex-column flex-sm-row">
-                          <button className="btn btn-sm btn-outline-warning" onClick={() => startEditAddress(idx)}>
-                            <i className="bi bi-pencil me-1"></i>Editar
-                          </button>
-                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteAddress(idx)}>
-                            <i className="bi bi-trash me-1"></i>Eliminar
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                      <div className="d-flex align-items-center gap-3">
+                        <img
+                          src={prod.image}
+                          alt={prod.name}
+                          style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 8, background: "#111" }}
+                          loading="lazy"
+                        />
+                        <div className="flex-grow-1">
+                          <div className="fw-semibold">{prod.name}</div>
+                          <div className="small text-white-50">Cantidad: {qty}</div>
 
-                  {/* FORMULARIO inline para agregar/editar */}
-                  {editingAddressIndex >= 0 && (
-                    <div className="mt-4 p-4 shadow-lg" style={{
-                      background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)",
-                      borderRadius: 12,
-                      border: "2px solid #d4af37"
-                    }}>
-                      <h5 className="mb-4" style={{ color: "#d4af37", fontWeight: "600" }}>
-                        <i className="bi bi-plus-circle me-2"></i>
-                        {editingAddressIndex < addresses.length ? "Editar dirección" : "Nueva dirección"}
-                      </h5>
-                      <div className="row g-2 mt-2">
-                        <div className="col-12 col-md-6">
-                          <input
-                            className="form-control form-control-sm"
-                            name="label"
-                            placeholder="Etiqueta (p. ej. Casa, Oficina)"
-                            value={addressForm.label}
-                            onChange={handleAddressFormChange}
-                          />
-                        </div>
-                        <div className="col-12 col-md-6">
-                          <input
-                            className="form-control form-control-sm"
-                            name="telefono"
-                            placeholder="Teléfono"
-                            value={addressForm.telefono}
-                            onChange={handleAddressFormChange}
-                          />
-                        </div>
-                        <div className="col-12">
-                          <input
-                            className="form-control form-control-sm"
-                            name="calle"
-                            placeholder="Calle y número"
-                            value={addressForm.calle}
-                            onChange={handleAddressFormChange}
-                          />
-                        </div>
-                        <div className="col-6">
-                          <input
-                            className="form-control form-control-sm"
-                            name="ciudad"
-                            placeholder="Ciudad"
-                            value={addressForm.ciudad}
-                            onChange={handleAddressFormChange}
-                          />
-                        </div>
-                        <div className="col-6">
-                          <input
-                            className="form-control form-control-sm"
-                            name="codigoPostal"
-                            placeholder="Código Postal"
-                            value={addressForm.codigoPostal}
-                            onChange={handleAddressFormChange}
-                          />
-                        </div>
-                        <div className="col-12">
-                          <input
-                            className="form-control form-control-sm"
-                            name="pais"
-                            placeholder="País"
-                            value={addressForm.pais}
-                            onChange={handleAddressFormChange}
-                          />
-                        </div>
-                      </div>
+                          {/* Precios */}
+                          {pct > 0 ? (
+                            <div className="d-flex align-items-center gap-2">
+                              <span className="text-muted text-decoration-line-through">
+                                {money(unit)}
+                              </span>
+                              <strong style={{ color: "#d4af37" }}>{money(unitDisc)}</strong>
+                              <span className="badge bg-warning text-dark ms-1">-{pct}%</span>
+                            </div>
+                          ) : (
+                            <strong>{money(unit)}</strong>
+                          )}
 
-                      <div className="mt-3 d-flex gap-2 justify-content-end">
-                        <button className="btn btn-sm btn-secondary" onClick={cancelEditAddress} disabled={loading}>Cancelar</button>
-                        <button className="btn btn-sm btn-warning" onClick={saveAddress} disabled={loading}>
-                          {loading ? 'Guardando...' : 'Guardar dirección'}
-                        </button>
+                          {/* Totales por ítem */}
+                          <div className="small mt-1">
+                            <span className="text-white-50 me-2">Subtotal ítem:</span>
+                            <span className="me-2">{money(lineSubtotal)}</span>
+                            {pct > 0 && (
+                              <>
+                                <span className="text-white-50 me-2">Total con desc.:</span>
+                                <strong style={{ color: "#d4af37" }}>{money(lineTotal)}</strong>
+                              </>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </section>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <div className="text-muted">Sin items en esta orden.</div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</section>
+                
 
                 {/* Botón de Cerrar Sesión */}
                 <div className="text-center mt-5 mb-4">

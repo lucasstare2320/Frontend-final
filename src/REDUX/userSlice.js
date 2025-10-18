@@ -61,16 +61,12 @@ const removeAddressesFromLocalStorage = (userId) => {
 };
 
 export const postUsuario = createAsyncThunk("users/postUser", async (newuser) => {
-  console.log(newuser)
   const { data } = await axios.post(`${URL}/auth/register`, newuser);
-  console.log(data)
   return data
 })
 
 export const loginUsuario = createAsyncThunk("users/loginUser", async (newuser) => {
-  console.log(newuser)
   const { data } = await axios.post(`${URL}/auth/login`, newuser);
-  console.log(data)
   return data
 })
 
@@ -88,7 +84,6 @@ export const updateUserProfile = createAsyncThunk("users/updateProfile", async (
   };
 
   const { data } = await axios.patch(`${URL}/users/${userId}`, userData, config);
-  console.log("Usuario actualizado:", data);
   return data;
 })
 

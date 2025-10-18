@@ -33,7 +33,6 @@ function Registro() {
      navigate("/");
     } else {
       setMostrarMensaje(true);
-      console.log(mostrarMensaje)
     }
   };
 
@@ -60,7 +59,6 @@ function Registro() {
                   placeholder="Nombre"
                   onChange={(e)=>{
                     setFirstName(e.target.value)
-                    console.log(e.target.value)
                   }
                   }
                 />

@@ -1,10 +1,9 @@
 import { configureStore } from "@reduxjs/toolkit";
-import postReducer from "./userSlice";
 import cartReducer from "./cartSlice";
 import productReducer from "./productSlice";
 import categoryReducer from "./categorySlice";
-import carritoReducer from "./carritoSlice";
 import userReducer from "./userSlice";
+import orderReducer from "./orderSlice"
 
 
 export const store = configureStore({
@@ -13,6 +12,6 @@ export const store = configureStore({
     products: productReducer,  
     categories: categoryReducer,
     users: userReducer, 
-    carrito : carritoReducer
+    orders: orderReducer
   },
 });

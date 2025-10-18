@@ -1,32 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// 🔧 Cambiá esta URL según tu backend
-const BASE_URL = "http://localhost:8080/api/categories";
+const URL = "http://localhost:8080";
 
-// 🔹 Obtener todas las categorías
 export const fetchCategories = createAsyncThunk(
-  "categories/fetchCategories",
+  "categories/fetchAll",
   async () => {
-    const { data } = await axios.get(BASE_URL);
-    return data;
-  }
-);
-
-// 🔹 Obtener una categoría por ID
-export const fetchCategoryById = createAsyncThunk(
-  "categories/fetchCategoryById",
-  async (id) => {
-    const { data } = await axios.get(`${BASE_URL}/${id}`);
-    return data;
-  }
-);
-
-// 🔹 Crear nueva categoría
-export const createCategory = createAsyncThunk(
-  "categories/createCategory",
-  async ({ name }) => {
-    const { data } = await axios.post(BASE_URL, { name });
+    const { data } = await axios.get(`${URL}/category`);
+    // data esperado: [{id:1,name:"Eau de Toilette"}, ...]
     return data;
   }
 );
@@ -34,60 +15,26 @@ export const createCategory = createAsyncThunk(
 const categorySlice = createSlice({
   name: "categories",
   initialState: {
-    items: [], // todas las categorías
-    selected: null, // categoría seleccionada por id
+    items: [],
     loading: false,
     error: null,
   },
-  reducers: {
-    clearSelectedCategory: (state) => {
-      state.selected = null;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
-      // 🔹 GET ALL
       .addCase(fetchCategories.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
+        state.items = action.payload || [];
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message;
-      })
-
-      // 🔹 GET BY ID
-      .addCase(fetchCategoryById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchCategoryById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.selected = action.payload;
-      })
-      .addCase(fetchCategoryById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
-      })
-
-      // 🔹 CREATE
-      .addCase(createCategory.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(createCategory.fulfilled, (state, action) => {
-        state.loading = false;
-        state.items.push(action.payload);
-      })
-      .addCase(createCategory.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message;
+        state.error = action.error?.message || "Error cargando categorías";
       });
   },
 });
 
-export const { clearSelectedCategory } = categorySlice.actions;
 export default categorySlice.reducer;

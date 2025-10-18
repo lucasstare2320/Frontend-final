@@ -1,110 +1,50 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./LandingPage.css";
 import ProductCard from "./ProductCard";
 import Footer from "./FOOTER/Footer";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom";
 import Navbarperfume from "./NAVBAR/Navbar";
+import { fetchProducts } from "../../REDUX/productSlice";
 const LandingPage = ({ featuredProducts }) => {
   const dispatch = useDispatch();
      const navigate = useNavigate()
   
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
-  // PROPS definisiones en estilo "json" que despues mapeamos para ahorrar codigo
   const categories = [
     {
       title: "Para Ella",
-      image:
-        "https://images.unsplash.com/photo-1616627989394-7e3f0e8c5c2e?auto=format&fit=crop&w=1200&q=60",
+      image: "https://images.pexels.com/photos/1961789/pexels-photo-1961789.jpeg?auto=compress&cs=tinysrgb&w=1200", // floral, elegante
     },
     {
       title: "Para Él",
-      image:
-        "https://images.unsplash.com/photo-1600180758890-3c6b3f8b3e4c?auto=format&fit=crop&w=1200&q=60",
+      image: "https://images.pexels.com/photos/3989394/pexels-photo-3989394.jpeg?auto=compress&cs=tinysrgb&w=1200", // tono masculino
     },
   ];
 
-  // Ejemplo de productos, tenemos que despues remplazar esto por un fetch que modifica un usestate
-  const defaultProducts = [
-    {
-      id: "chanel-no5",
-      name: "Chanel No. 5",
-      brand: "Chanel",
-      price: 150,
-      currency: "€",
-      descripcion: "TEXTO EJEMLPO descripcion 1",
-      image:
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=60",
-    },
-    {
-      id: "dior-sauvage",
-      name: "Dior Sauvage",
-      brand: "Dior",
-      price: 120,
-      currency: "€",
-      descripcion: "TEXTO EJEMLPO descripcion 2",
-      image:
-        "https://images.unsplash.com/photo-1560347876-aeef00ee58a1?auto=format&fit=crop&w=800&q=60",
-    },
-    {
-      id: "creed-aventus",
-      name: "Creed Aventus",
-      brand: "Creed",
-      price: 250,
-      currency: "€",
-      descripcion: "TEXTO EJEMLPO descripcion 3",
-      image:
-        "https://images.unsplash.com/photo-1584270354949-6f80f5b76b0b?auto=format&fit=crop&w=800&q=60",
-    },
-    {
-      id: "jo-malone",
-      name: "Jo Malone London",
-      brand: "Jo Malone",
-      price: 130,
-      currency: "€",
-      descripcion: "TEXTO EJEMLPO descripcion 4",
-      image:
-        "https://images.unsplash.com/photo-1599947286041-a7b1d2f6a4a6?auto=format&fit=crop&w=800&q=60",
-    },
-  ];
-
-  const products =
-    Array.isArray(featuredProducts) && featuredProducts.length
-      ? featuredProducts
-      : defaultProducts;
-
-  // Handler que despacha la acción si se hizo click en la img
-  const handleProductClick = (e, product) => {
-    // e.target puede ser la imagen o un elemento dentro del ProductCard.
-    // Usamos closest para detectar si hubo click sobre una <img> dentro del contenedor.
-    const img = e.target.tagName && e.target.tagName.toLowerCase() === "img"
-      ? e.target
-      : e.target.closest && e.target.closest("img");
-    if (img) {
-      dispatch({ type: "SET_SELECTED_PRODUCT", payload: product });
-      //esto manda el producto al reducer, para que este guardado para el detalle
-    }
-
-    //despues te lleva al detalle
-    navigate(`/detalle/:${product.id}`) // CAMBIAR A FUTURO por el id del producto del fetch
-  };
+  const allProducts = useSelector((s) => s.products.items || []);
+  const featured = useMemo(() => {
+    if (!allProducts.length) return [];
+    const topDiscount = [...allProducts]
+       .sort((a, b) => (Number(b.discount || 0) - Number(a.discount || 0)))
+       .slice(0, 4);
+    return topDiscount;
+  }, [allProducts]);
 
 
-      const handleAddToCart = (product) => {
-    dispatch({
-      type: "ADD_TO_CART",
-      payload: {
-        id: product.id,
-        name: product.name,
-        brand: product.brand,
-        price: product.price,
-        currency: product.currency,
-        image: product.image,
-        qty: 1, // cantidad inicial
-      },
-    });
-  };
+
+ 
+
+ const handleProductClick = (id) => navigate(`/detalle/${id}`);
+
+
+    const handleAddToCart = (product) => {
+       dispatch(addToCart({ ...product, qty: 1 }));
+     };
 
 
 
@@ -119,11 +59,11 @@ const LandingPage = ({ featuredProducts }) => {
               {/* Slide 1 */}
               <div className="carousel-item active">
                 <img
-                  src="https://via.placeholder.com/1200x500?text=Slide+1"
-                  className="d-block w-100"
-                  alt="Slide 1"
-                  style={{ objectFit: "cover", height: "60vh" }}
-                />
+  src="https://images.pexels.com/photos/3059609/pexels-photo-3059609.jpeg?auto=compress&cs=tinysrgb&w=1600"
+  className="d-block w-100"
+  alt="Slide 1"
+  style={{ objectFit: "cover", height: "60vh" }}
+/>
                 <div
                   className="carousel-caption d-none d-md-block"
                   style={{ backgroundColor: "rgba(0,0,0,0.3)", borderRadius: "0.5rem" }}
@@ -137,12 +77,12 @@ const LandingPage = ({ featuredProducts }) => {
 
               {/* Slide 2 */}
               <div className="carousel-item">
-                <img
-                  src="https://via.placeholder.com/1200x500?text=Slide+2"
-                  className="d-block w-100"
-                  alt="Slide 2"
-                  style={{ objectFit: "cover", height: "60vh" }}
-                />
+             <img
+  src="https://images.pexels.com/photos/1961791/pexels-photo-1961791.jpeg?auto=compress&cs=tinysrgb&w=1600"
+  className="d-block w-100"
+  alt="Slide 2"
+  style={{ objectFit: "cover", height: "60vh" }}
+/>
                 <div
                   className="carousel-caption d-none d-md-block"
                   style={{ backgroundColor: "rgba(0,0,0,0.3)", borderRadius: "0.5rem" }}
@@ -156,12 +96,12 @@ const LandingPage = ({ featuredProducts }) => {
 
               {/* Slide 3 */}
               <div className="carousel-item">
-                <img
-                  src="https://via.placeholder.com/1200x500?text=Slide+3"
-                  className="d-block w-100"
-                  alt="Slide 3"
-                  style={{ objectFit: "cover", height: "60vh" }}
-                />
+<img
+  src="https://images.pexels.com/photos/1557980/pexels-photo-1557980.jpeg?auto=compress&cs=tinysrgb&w=1600"
+  className="d-block w-100"
+  alt="Slide 3"
+  style={{ objectFit: "cover", height: "60vh" }}
+/>
                 <div
                   className="carousel-caption d-none d-md-block"
                   style={{ backgroundColor: "rgba(0,0,0,0.3)", borderRadius: "0.5rem" }}
@@ -223,26 +163,27 @@ const LandingPage = ({ featuredProducts }) => {
         </section>
 
         {/* Featured Products */}
-        <section aria-labelledby="featured-title" className="mb-5">
-          <h2 id="featured-title" className="section-title mb-4">
-            Los Más Deseados
-          </h2>
+         <section aria-labelledby="featured-title" className="mb-5">
+          <h2 id="featured-title" className="section-title mb-4">Los Más Deseados</h2>
 
           <div className="row">
-            {products.map((product) => (
+            {featured.map((product) => (
               <div
                 className="col-6 col-md-3 mb-4 d-flex align-items-stretch"
                 key={product.id}
-                onClick={(e) => handleProductClick(e, product)}
+                onClick={() => handleProductClick(product.id)}
                 style={{ cursor: "pointer" }}
               >
                 <div className="w-100">
-                  {/* Usamos tu ProductCard tal cual (no modificar) */}
-                                    <ProductCard product={product} onAddToCart={handleAddToCart} />
-
+                  <ProductCard product={product}  onAddToCart={() => handleAddToCart(product)} />
                 </div>
               </div>
             ))}
+
+            {/* Fallback si hay menos de 4 productos disponibles */}
+            {featured.length === 0 && (
+              <div className="text-white-50">No hay productos destacados por ahora.</div>
+            )}
           </div>
         </section>
 
