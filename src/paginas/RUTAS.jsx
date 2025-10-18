@@ -22,7 +22,8 @@ function RUTAS() {
     <>
       <Routes>
         {/* Rutas públicas */}
-        <Route path='/' element={<Login />}></Route>
+        <Route path='/' element={<LandingPage></LandingPage>}></Route>
+        <Route path='/login' element={<Login />}></Route>
         <Route path='/registro' element={<Registro />}></Route>
         <Route path='/landingpage' element={<LandingPage></LandingPage>}></Route>
         <Route path='/productos' element={<Productos />}></Route>

@@ -1,30 +1,12 @@
 // ../landingpage/ProductCard.jsx
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchImagesById } from "../../REDUX/ImageSlice";
 
 
-const ProductCard = ({ product, onAddToCart, productId }) => {
-  const dispatch = useDispatch();
+const ProductCard = ({ product, onAddToCart }) => {
   const navigate = useNavigate()
-  const { id ,name, description, categoryName ,discount ,price, stock } = product;
-  //const image = `data:image/jpeg;base64,${product.images[0]}`
-  
- const images = useSelector((state) => state);
-  useEffect(() => {
-    dispatch(fetchImagesById(productId));
-  }, [dispatch]);
-
-  const image = images[0]
-
-const ImgFromBase64 = ( file ) => {
-  const src = `data:image/jpeg;base64,${file}`; // o image/png según corresponda
-  return <img src={src} alt="imagen" style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain"}}
-  loading="lazy"
-   />;
-};
-
+  const { id ,name, description, categoryName ,discount ,price, stock, image } = product;
+console.log("name", name)
   return (
     <article key={id}
       className="card h-100 text-center border-0"

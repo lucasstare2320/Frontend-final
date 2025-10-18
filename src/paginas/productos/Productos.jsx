@@ -20,6 +20,8 @@ const Productos = () => {
   const { items: productos, loading, error } = useSelector((state) => state.products);
   const admin = useSelector((state) => state.user?.admin);
 
+console.log("productos", productos)
+
   // estado local para filtros
   const [selectedBrand, setSelectedBrand] = useState("Todas");
   const [priceRange, setPriceRange] = useState([0, 200]);
@@ -189,7 +191,6 @@ const Productos = () => {
                   style={{ cursor: "pointer" }}
                 >
                   <ProductCard
-                    productId={product.id}
                     product={product}
                     onAddToCart={handleAddToCart}
                   />

@@ -14,10 +14,7 @@ export const fetchProducts = createAsyncThunk(
     if (categoryId) params.categoryId = categoryId;
 
     const { data } = await axios.get(BASE_URL, { params });
-    return data.map(async(product) => {
-      const {data} = await axios(`http://localhost:8080/images/products/${product.id}/images`)
-      return {...data, images: data}
-    })
+    return data.filter(item => item.image)
   }
 );
 

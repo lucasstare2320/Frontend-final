@@ -66,7 +66,7 @@ const ProductDetail = () => {
       <div className="product-detail-page container py-4 bg-dark" style={{ backgroundColor: "#000" }}>
         <nav aria-label="breadcrumb" className="mb-3">
           <ol className="breadcrumb bg-transparent p-0 mb-0">
-            <li className="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li className="breadcrumb-item"><a href="/login">Inicio</a></li>
             <li className="breadcrumb-item"><a href="/perfumes">Perfumes</a></li>
             <li className="breadcrumb-item active" aria-current="page">{product.name}</li>
           </ol>

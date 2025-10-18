@@ -472,7 +472,7 @@ const Usuario = () => {
                 <p className="text-white mb-3">
                   No hay usuario logueado. Inicia sesión para ver tu perfil.
                 </p>
-                <a href="/" className="btn btn-warning">
+                <a href="/login" className="btn btn-warning">
                   Ir a Login
                 </a>
               </div>

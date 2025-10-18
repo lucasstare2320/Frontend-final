@@ -29,9 +29,7 @@ function Registro() {
     setPasword("")
     setConfirm("")
 
-      console.log(mostrarMensaje)
       if (postUsuario.fulfilled.match(result)) {
-        console.log(mostrarMensaje)
      navigate("/");
     } else {
       setMostrarMensaje(true);
@@ -44,7 +42,7 @@ function Registro() {
         {/* Panel Izquierdo - Registro */}
         <div className="col-md-6 p-5 border-end border-dark-subtle">
           <h3 className="text-center text-gold fw-bold mb-1">EL CÓDIGO PERFUMERIE</h3>
-          <p className="text-center text-muted mb-4" onClick={() => navigate("/")}>
+          <p className="text-center text-muted mb-4" onClick={() => navigate("/login")}>
             ¿Ya tienes una cuenta?{" "}
             <span className="text-gold fw-semibold" style={{ cursor: "pointer" }}>
               Inicia sesión aquí
